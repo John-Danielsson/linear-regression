@@ -7,7 +7,6 @@ from sklearn.metrics import r2_score
 from sklearn.metrics import mean_squared_error as mse
 from sklearn.model_selection import train_test_split
 from statsmodels.formula.api import ols
-from scipy.stats import pearsonr
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
@@ -26,12 +25,16 @@ columns = [
 df = df[columns].dropna()
 df['gdp_per_capita'] = df['gdp'] / df['population']
 # Remove outliers
-gdp_top = df['gdp_per_capita'].quantile(0.95)
-gdp_bottom = df['gdp_per_capita'].quantile(0.05)
-energy_top = df['energy_per_capita'].quantile(0.95)
-energy_bottom = df['energy_per_capita'].quantile(0.05)
-df = df[(gdp_bottom < df['gdp_per_capita']) & (df['gdp_per_capita'] < gdp_top)]
-df = df[(energy_bottom < df['energy_per_capita']) & (df['energy_per_capita'] < energy_top)]
+# Top 5% GDP
+g_t = df['gdp_per_capita'].quantile(0.95)
+# Bottom 5% GDP
+g_b = df['gdp_per_capita'].quantile(0.05)
+# Top 5% energy
+e_t = df['energy_per_capita'].quantile(0.95)
+# Bottom 5% energy
+e_b = df['energy_per_capita'].quantile(0.05)
+df = df[(g_b < df['gdp_per_capita']) & (df['gdp_per_capita'] < g_t)]
+df = df[(e_b < df['energy_per_capita']) & (df['energy_per_capita'] < e_t)]
 
 # Average GDP per capita divided by average energy use per capita
 baseline = np.average(df['gdp_per_capita'])
@@ -51,7 +54,7 @@ model = LinearRegression()
 model.fit(X=X_train, y=y_train)
 slope = model.coef_
 intercept = model.intercept_
-print(f'Predicted GDP per capita = (Energy use per capita)*{slope} + {intercept}')
+print(f'Predicted GDP/capita = (Energy use per capita)*{slope} + {intercept}')
 
 # Predict GDP per capita
 y_pred = model.predict(X_test)
